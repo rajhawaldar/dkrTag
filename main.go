@@ -29,7 +29,7 @@ type Tag struct {
 	Results []Result `json:"results"`
 }
 
-func GetTags(url string, tag *Tag) {
+func (tag *Tag) GetTags(url string) {
 	var tags Tag
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetEscapeHTML(false)
@@ -47,7 +47,7 @@ func GetTags(url string, tag *Tag) {
 	}
 	tag.Results = append(tag.Results, tags.Results...)
 	if tags.Next != "" {
-		GetTags(tags.Next, tag)
+		tag.GetTags(tags.Next)
 	}
 }
 func main() {
@@ -62,6 +62,6 @@ func main() {
 	}
 	var tags Tag
 	url := "https://hub.docker.com/v2/namespaces/" + repository + "/repositories/" + image + "/tags?page=1&page_size=100"
-	GetTags(url, &tags)
+	tags.GetTags(url)
 	fmt.Println(len(tags.Results))
 }
