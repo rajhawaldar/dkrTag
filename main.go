@@ -31,8 +31,6 @@ type Tag struct {
 
 func (tag *Tag) GetTags(url string) {
 	var tags Tag
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetEscapeHTML(false)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Panicln(err.Error())
