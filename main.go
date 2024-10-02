@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
+
+	"github.com/charmbracelet/huh/spinner"
 )
 
 const API string = "https://hub.docker.com/v2/namespaces/"
@@ -62,6 +65,7 @@ func (s *Search) doTagsExist(url string) bool {
 	return false
 }
 func main() {
+	var wg sync.WaitGroup
 	var namespace, repository string
 	flag.StringVar(&repository, "repository", "", "docker repository name, example: nginx, bash, ubuntu")
 	flag.StringVar(&namespace, "namespace", "library", "your docker namespace")
@@ -79,6 +83,20 @@ func main() {
 		fmt.Println("Repository does not contain any tags.")
 		os.Exit(0)
 	}
-	search.Tags(tagsURL)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		search.Tags(tagsURL)
+	}()
+	makeSpinnerWait := func() {
+		wg.Wait()
+	}
+	err := spinner.New().
+		Title("Fetching all image tags...").
+		Action(makeSpinnerWait).
+		Run()
+	if err != nil {
+		log.Panicln(err.Error())
+	}
 	fmt.Println(len(search.Results))
 }
