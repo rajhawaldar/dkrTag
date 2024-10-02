@@ -52,7 +52,13 @@ func (s *Search) Tags(url string) {
 }
 
 func (s *Search) doTagsExist(url string) bool {
-
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Panicln(err.Error())
+	}
+	if resp.StatusCode == 200 {
+		return true
+	}
 	return false
 }
 func main() {
@@ -68,7 +74,11 @@ func main() {
 	}
 	var search Search
 	tagsURL := API + namespace + "/repositories/" + repository + "/tags?page=1&page_size=100"
-	// /v2/namespaces/{namespace}/repositories/{repository}/tags
+	tagExistURL := API + namespace + "/repositories/" + repository + "/tags"
+	if !search.doTagsExist(tagExistURL) {
+		fmt.Println("Repository does not contain any tags.")
+		os.Exit(0)
+	}
 	search.Tags(tagsURL)
 	fmt.Println(len(search.Results))
 }
