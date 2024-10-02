@@ -25,15 +25,16 @@ type Tag struct {
 	Tag_status  string `json:"tag_status"`
 	LastUpdated string `json:"last_updated"`
 	FullSize    int    `json:"full_size"`
+	description string
 }
 type Search struct {
 	Next    string `json:"next"`
 	Results []Tag  `json:"results"`
 }
 type Model struct {
-	tags []Tag
-	list list.Model
-	err  error
+	tags   []Tag
+	list   list.Model
+	choice string
 }
 
 func (t Tag) FilterValue() string {
@@ -42,12 +43,16 @@ func (t Tag) FilterValue() string {
 func (t Tag) Title() string {
 	return t.Name
 }
-
+func (t Tag) Description() string {
+	return t.description
+}
 func (m *Model) initList(width, height int) {
 	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
 	m.list.Title = "Tags"
 	var items []list.Item
 	for _, tag := range m.tags {
+		date, _ := time.Parse(time.RFC3339, tag.LastUpdated)
+		tag.description = fmt.Sprintf("%-30s %-10s %-15s %-15s", tag.Name, tag.Tag_status, fmt.Sprintf("%.2f MB", float64(tag.FullSize)/(1<<20)), date.Format("2006-01-02"))
 		items = append(items, tag)
 	}
 	m.list.SetItems(items)
@@ -59,6 +64,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.initList(msg.Width, msg.Height)
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "enter":
+			m.choice = m.list.SelectedItem().(Tag).Name
+		}
+
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
@@ -98,15 +109,12 @@ func (s *Search) doTagsExist(url string) bool {
 	}
 	return false
 }
-func tagsToList(result []Tag) []string {
-	var tags []string = []string{}
-	for i := len(result) - 1; i >= 0; i-- {
-		date, _ := time.Parse(time.RFC3339, result[i].LastUpdated)
-		tags = append(tags, fmt.Sprintf("%-30s %-10s %-15s %-15s", result[i].Name, result[i].Tag_status, fmt.Sprintf("%.2f MB", float64(result[i].FullSize)/(1<<20)), date.Format("2006-01-02")))
-	}
-	return tags
-}
 
+func New(tags []Tag) *Model {
+	return &Model{
+		tags: tags,
+	}
+}
 func main() {
 	var wg sync.WaitGroup
 	var namespace, repository string
@@ -151,8 +159,9 @@ func main() {
 		}
 		return timeI.Before(timeJ)
 	})
-	tags := tagsToList(search.Results)
-	for _, tag := range tags {
-		fmt.Println(tag)
+	model := New(search.Results)
+	if _, err := tea.NewProgram(model).Run(); err != nil {
+		fmt.Printf("could not start program: %s\n", err)
+		os.Exit(1)
 	}
 }
