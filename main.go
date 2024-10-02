@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh/spinner"
 )
 
@@ -28,7 +30,44 @@ type Search struct {
 	Next    string `json:"next"`
 	Results []Tag  `json:"results"`
 }
+type Model struct {
+	tags []Tag
+	list list.Model
+	err  error
+}
 
+func (t Tag) FilterValue() string {
+	return t.Name
+}
+func (t Tag) Title() string {
+	return t.Name
+}
+
+func (m *Model) initList(width, height int) {
+	m.list = list.New([]list.Item{}, list.NewDefaultDelegate(), width, height)
+	m.list.Title = "Tags"
+	var items []list.Item
+	for _, tag := range m.tags {
+		items = append(items, tag)
+	}
+	m.list.SetItems(items)
+}
+func (m Model) Init() tea.Cmd {
+	return nil
+}
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.initList(msg.Width, msg.Height)
+	}
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
+}
+
+func (m Model) View() string {
+	return m.list.View()
+}
 func (s *Search) Tags(url string) {
 	var result Search
 	resp, err := http.Get(url)
