@@ -19,18 +19,18 @@ type Image struct {
 	Size         int    `json:"size"`
 	Status       string `json:"status"`
 }
-type Result struct {
+type Tag struct {
 	Name       string  `json:"name"`
 	Tag_status string  `json:"tag_status"`
 	Images     []Image `json:"images"`
 }
-type Tag struct {
-	Next    string   `json:"next"`
-	Results []Result `json:"results"`
+type Response struct {
+	Next string `json:"next"`
+	Tags []Tag  `json:"results"`
 }
 
-func (tag *Tag) GetTags(url string) {
-	var tags Tag
+func (s *Response) GetTags(url string) {
+	var result Response
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Panicln(err.Error())
@@ -39,13 +39,13 @@ func (tag *Tag) GetTags(url string) {
 	if err != nil {
 		log.Panicln(err.Error())
 	}
-	errJson := json.Unmarshal(data, &tags)
+	errJson := json.Unmarshal(data, &result)
 	if errJson != nil {
 		log.Panicln(err.Error())
 	}
-	tag.Results = append(tag.Results, tags.Results...)
-	if tags.Next != "" {
-		tag.GetTags(tags.Next)
+	s.Tags = append(s.Tags, result.Tags...)
+	if result.Next != "" {
+		s.GetTags(result.Next)
 	}
 }
 func main() {
@@ -53,13 +53,14 @@ func main() {
 	flag.StringVar(&image, "image", "", "docker image name")
 	flag.StringVar(&repository, "repository", "library", "docker image name")
 	flag.Parse()
+
 	image = strings.TrimSpace(image)
 	if image == "" && len(image) == 0 {
 		fmt.Fprintf(os.Stderr, "missing required -image flag\n")
 		os.Exit(2)
 	}
-	var tags Tag
+	var Response Response
 	url := "https://hub.docker.com/v2/namespaces/" + repository + "/repositories/" + image + "/tags?page=1&page_size=100"
-	tags.GetTags(url)
-	fmt.Println(len(tags.Results))
+	Response.GetTags(url)
+	fmt.Println(len(Response.Tags))
 }
