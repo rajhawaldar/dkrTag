@@ -16,9 +16,12 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh/spinner"
+	"github.com/charmbracelet/lipgloss"
 )
 
 const API string = "https://hub.docker.com/v2/namespaces/"
+
+var quitTextStyle = lipgloss.NewStyle().Margin(0, 0, 1, 0)
 
 type Tag struct {
 	Name        string `json:"name"`
@@ -68,6 +71,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			m.choice = m.list.SelectedItem().(Tag).Name
+			return m, tea.Quit
 		}
 
 	}
@@ -77,6 +81,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	if m.choice != "" {
+		return quitTextStyle.Render(fmt.Sprintf("%s", m.choice))
+	}
 	return m.list.View()
 }
 func (s *Search) Tags(url string) {
