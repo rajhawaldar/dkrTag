@@ -58,7 +58,7 @@ func (s *Search) doTagsExist(url string) bool {
 func main() {
 	var namespace, repository string
 	flag.StringVar(&repository, "repository", "", "docker repository name, example: nginx, bash, ubuntu")
-	flag.StringVar(&namespace, "namespace", "library", "your docker namespace (Optional, default is library)")
+	flag.StringVar(&namespace, "namespace", "library", "your docker namespace")
 	flag.Parse()
 
 	repository = strings.TrimSpace(repository)
