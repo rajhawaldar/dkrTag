@@ -24,13 +24,13 @@ type Tag struct {
 	Tag_status string  `json:"tag_status"`
 	Images     []Image `json:"images"`
 }
-type Response struct {
-	Next string `json:"next"`
-	Tags []Tag  `json:"results"`
+type Search struct {
+	Next    string `json:"next"`
+	Results []Tag  `json:"results"`
 }
 
-func (s *Response) GetTags(url string) {
-	var result Response
+func (s *Search) Tags(url string) {
+	var result Search
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Panicln(err.Error())
@@ -43,9 +43,9 @@ func (s *Response) GetTags(url string) {
 	if errJson != nil {
 		log.Panicln(err.Error())
 	}
-	s.Tags = append(s.Tags, result.Tags...)
+	s.Results = append(s.Results, result.Results...)
 	if result.Next != "" {
-		s.GetTags(result.Next)
+		s.Tags(result.Next)
 	}
 }
 func main() {
@@ -59,8 +59,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "missing required -image flag\n")
 		os.Exit(2)
 	}
-	var Response Response
+	var search Search
 	url := "https://hub.docker.com/v2/namespaces/" + repository + "/repositories/" + image + "/tags?page=1&page_size=100"
-	Response.GetTags(url)
-	fmt.Println(len(Response.Tags))
+
+	search.Tags(url)
+	fmt.Println(len(search.Results))
 }
