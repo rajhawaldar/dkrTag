@@ -8,26 +8,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/charmbracelet/huh/spinner"
 )
 
 const API string = "https://hub.docker.com/v2/namespaces/"
 
-type Image struct {
-	Architecture string `json:"architecture"`
-	Features     string `json:"os_features"`
-	Digest       string `json:"digest"`
-	Os           string `json:"os"`
-	Size         int    `json:"size"`
-	Status       string `json:"status"`
-}
 type Tag struct {
-	Name       string  `json:"name"`
-	Tag_status string  `json:"tag_status"`
-	Images     []Image `json:"images"`
+	Name        string `json:"name"`
+	Tag_status  string `json:"tag_status"`
+	LastUpdated string `json:"last_updated"`
+	FullSize    int    `json:"full_size"`
 }
 type Search struct {
 	Next    string `json:"next"`
@@ -64,6 +59,15 @@ func (s *Search) doTagsExist(url string) bool {
 	}
 	return false
 }
+func tagsToList(result []Tag) []string {
+	var tags []string = []string{}
+	for i := len(result) - 1; i >= 0; i-- {
+		date, _ := time.Parse(time.RFC3339, result[i].LastUpdated)
+		tags = append(tags, fmt.Sprintf("%-30s %-10s %-15s %-15s", result[i].Name, result[i].Tag_status, fmt.Sprintf("%.2f MB", float64(result[i].FullSize)/(1<<20)), date.Format("2006-01-02")))
+	}
+	return tags
+}
+
 func main() {
 	var wg sync.WaitGroup
 	var namespace, repository string
@@ -98,5 +102,18 @@ func main() {
 	if err != nil {
 		log.Panicln(err.Error())
 	}
-	fmt.Println(len(search.Results))
+
+	sort.Slice(search.Results, func(i, j int) bool {
+		timeI, err1 := time.Parse(time.RFC3339, search.Results[i].LastUpdated)
+		timeJ, err2 := time.Parse(time.RFC3339, search.Results[j].LastUpdated)
+
+		if err1 != nil || err2 != nil {
+			return false
+		}
+		return timeI.Before(timeJ)
+	})
+	tags := tagsToList(search.Results)
+	for _, tag := range tags {
+		fmt.Println(tag)
+	}
 }
