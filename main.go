@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const API string = "https://hub.docker.com/v2/namespaces/"
+
 type Image struct {
 	Architecture string `json:"architecture"`
 	Features     string `json:"os_features"`
@@ -48,20 +50,25 @@ func (s *Search) Tags(url string) {
 		s.Tags(result.Next)
 	}
 }
+
+func (s *Search) doTagsExist(url string) bool {
+
+	return false
+}
 func main() {
-	var image, repository string
-	flag.StringVar(&image, "image", "", "docker image name")
-	flag.StringVar(&repository, "repository", "library", "docker image name")
+	var namespace, repository string
+	flag.StringVar(&repository, "repository", "", "docker repository name, example: nginx, bash, ubuntu")
+	flag.StringVar(&namespace, "namespace", "library", "your docker namespace (Optional, default is library)")
 	flag.Parse()
 
-	image = strings.TrimSpace(image)
-	if image == "" && len(image) == 0 {
-		fmt.Fprintf(os.Stderr, "missing required -image flag\n")
+	repository = strings.TrimSpace(repository)
+	if repository == "" && len(repository) == 0 {
+		fmt.Fprintf(os.Stderr, "missing required -repository flag\n")
 		os.Exit(2)
 	}
 	var search Search
-	url := "https://hub.docker.com/v2/namespaces/" + repository + "/repositories/" + image + "/tags?page=1&page_size=100"
-
-	search.Tags(url)
+	tagsURL := API + namespace + "/repositories/" + repository + "/tags?page=1&page_size=100"
+	// /v2/namespaces/{namespace}/repositories/{repository}/tags
+	search.Tags(tagsURL)
 	fmt.Println(len(search.Results))
 }
