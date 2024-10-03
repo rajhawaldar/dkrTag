@@ -13,7 +13,18 @@
 
 ## Usage
 
-The syntax for using the tool:
+Check input required by the tool.
+
+```bash
+$ dkrTag --help
+Usage of dkrTag:
+  -namespace string
+        your docker namespace (default "library")
+  -repository string
+        docker repository name, example: nginx, bash, ubuntu
+```
+
+Syntax for using the tool:
 ```bash
 dkrTag --repository <repository-name> [--namespace <namespace-name>]
 ```
