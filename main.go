@@ -164,7 +164,7 @@ func main() {
 		if err1 != nil || err2 != nil {
 			return false
 		}
-		return timeI.Before(timeJ)
+		return timeI.After(timeJ)
 	})
 	model := New(search.Results)
 	if _, err := tea.NewProgram(model).Run(); err != nil {
