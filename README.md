@@ -2,6 +2,10 @@
 
 `dkrTag` is a tool built in Go that fetches Docker tags from a specific repository using the [DockerHub APIs](https://docs.docker.com/reference/api/hub/latest/) and provides a UI interface to filter those tags. It features a user-friendly terminal interface built with [Charmbracelet's Bubble Tea](https://github.com/charmbracelet/bubbletea) framework and the [Bubbles List](https://github.com/charmbracelet/bubbles) component for easy interaction.
 
+
+https://github.com/user-attachments/assets/d02df2f4-5b5e-48e2-ab8f-427f033f9568
+
+
 ## Installation
 
 1. Download the `dkrTag` binary from the [releases page](https://github.com/rajhawaldar/dkrTag/releases).
