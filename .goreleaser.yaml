@@ -10,6 +10,7 @@ version: 2
 
 before:
   hooks:
+    - rm -rf dist
     - go mod tidy
 
 
